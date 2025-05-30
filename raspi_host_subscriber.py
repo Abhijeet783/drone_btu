@@ -1,0 +1,37 @@
+import paho.mqtt.client as mqtt
+import json
+broker_address = "192.168.6.24"  # The broker is on the same Pi
+port = 1883
+topic = "motive/data"  # Choose a specific topic for your motive data
+
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to MQTT Broker!")
+        client.subscribe(topic) # Subscribe to the motive data topic
+        print(f"Subscribed to topic: {topic}")
+    else:
+        print(f"Failed to connect, return code {rc}\n")
+
+def on_message(client, userdata, msg):
+    try:
+        data = json.loads(msg.payload.decode())
+        print(f"Received ID: {data['id']}")
+        print(f"position: {data['position']}")
+        print(f"Rotation: {data['rotation']}")
+    except Exception as e:
+        print(f"Error decoding message: {e}")
+
+
+    # print("inside on_message")
+    # When a message is received on the subscribed topic
+    print(f"Received motive data on topic '{msg.topic}': {msg.payload.decode()}")
+    # Here you can add your logic to process the received motive data
+    # e.g., store it in a file, update a display, control other hardware, etc.
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+client.connect(broker_address, port, 60)
+
+# Start a loop to process network traffic and callbacks
+client.loop_forever()
